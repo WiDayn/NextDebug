@@ -7,7 +7,9 @@ import (
 	"log"
 	"net/http"
 	"prmlk.com/nextdebug/common"
+	"prmlk.com/nextdebug/dto"
 	"prmlk.com/nextdebug/model"
+	"prmlk.com/nextdebug/response"
 )
 
 func Register(ctx *gin.Context) {
@@ -16,23 +18,24 @@ func Register(ctx *gin.Context) {
 	password := ctx.PostForm("password")
 
 	if len(name) < 3 {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 422, "msg": "用户名不能小于三位"})
+		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "用户名不能小于三位")
 		return
 	}
 
 	if len(password) < 6 {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 422, "msg": "密码不能少于六位"})
+		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "密码不能少于六位")
 		return
 	}
 
 	if isNameExist(DB, name) {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 422, "msg": "用户名已经被注册"})
+		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "用户名已经被注册")
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": "加密错误"})
+		response.Response(ctx, http.StatusInternalServerError, 500, nil, "加密错误")
+		return
 	}
 	newUser := model.User{
 		Name:     name,
@@ -40,9 +43,9 @@ func Register(ctx *gin.Context) {
 	}
 	tx := DB.Create(&newUser)
 	if tx.Error != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 500, "msg": tx.Error})
+		response.Response(ctx, http.StatusInternalServerError, 500, nil, "注册失败")
 	} else {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 200, "msg": "注册成功"})
+		response.Response(ctx, http.StatusOK, 200, nil, "注册成功")
 	}
 	log.Println(name, password)
 }
@@ -57,20 +60,20 @@ func Login(ctx *gin.Context) {
 	DB.Where("name = ?", name).First(&user)
 
 	if user.ID <= 0 {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 400, "msg": "用户名不存在"})
+		response.Response(ctx, http.StatusUnprocessableEntity, 400, nil, "用户名不存在")
 		return
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": "400", "msg": "用户名或密码错误"})
+		response.Response(ctx, http.StatusUnprocessableEntity, 400, nil, "用户名或密码错误")
 		return
 	}
 
 	token, err := common.ReleaseToken(user)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": "系统异常"})
+		response.Response(ctx, http.StatusInternalServerError, 500, nil, "系统异常")
 		log.Printf("token generate error : %v\n", err)
 		return
 	}
@@ -86,7 +89,7 @@ func Login(ctx *gin.Context) {
 func Info(ctx *gin.Context) {
 	user, _ := ctx.Get("user")
 
-	ctx.JSON(http.StatusOK, gin.H{"code": 200, "data": gin.H{"user": user}})
+	ctx.JSON(http.StatusOK, gin.H{"code": 200, "data": gin.H{"user": dto.ToUserDto(user.(model.User))}})
 }
 
 func isNameExist(db *gorm.DB, name string) bool {
