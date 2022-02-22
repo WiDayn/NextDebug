@@ -57,20 +57,36 @@ func Login(ctx *gin.Context) {
 	DB.Where("name = ?", name).First(&user)
 
 	if user.ID <= 0 {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 400, "msg": "用户名或密码错误"})
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 400, "msg": "用户名不存在"})
 		return
 	}
+
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err == nil {
-		ctx.JSON(http.StatusAccepted, gin.H{
-			"code": 200,
-			"data": gin.H{"token": "123"},
-			"msg":  "登陆成功"})
-		return
-	} else {
+
+	if err != nil {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": "400", "msg": "用户名或密码错误"})
 		return
 	}
+
+	token, err := common.ReleaseToken(user)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": "系统异常"})
+		log.Printf("token generate error : %v\n", err)
+		return
+	}
+
+	ctx.JSON(http.StatusAccepted, gin.H{
+		"code": 200,
+		"data": gin.H{"token": token},
+		"msg":  "登陆成功"})
+
+	return
+}
+
+func Info(ctx *gin.Context) {
+	user, _ := ctx.Get("user")
+
+	ctx.JSON(http.StatusOK, gin.H{"code": 200, "data": gin.H{"user": user}})
 }
 
 func isNameExist(db *gorm.DB, name string) bool {
