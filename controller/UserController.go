@@ -14,31 +14,37 @@ import (
 
 func Register(ctx *gin.Context) {
 	DB := common.GetDB()
-	name := ctx.PostForm("name")
-	password := ctx.PostForm("password")
 
-	if len(name) < 3 {
+	var requestUser = model.User{}
+	err := ctx.Bind(&requestUser)
+	if err != nil {
+		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "用户信息读取错误")
+		return
+	}
+
+	if len(requestUser.Name) < 3 {
 		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "用户名不能小于三位")
 		return
 	}
 
-	if len(password) < 6 {
+	if len(requestUser.Password) < 6 {
 		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "密码不能少于六位")
 		return
 	}
 
-	if isNameExist(DB, name) {
+	if isNameExist(DB, requestUser.Name) {
 		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "用户名已经被注册")
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(requestUser.Password), bcrypt.DefaultCost)
 	if err != nil {
 		response.Response(ctx, http.StatusInternalServerError, 500, nil, "加密错误")
 		return
 	}
 	newUser := model.User{
-		Name:     name,
+		Email:    requestUser.Email,
+		Name:     requestUser.Name,
 		Password: string(hashedPassword),
 	}
 	tx := DB.Create(&newUser)
@@ -47,7 +53,7 @@ func Register(ctx *gin.Context) {
 	} else {
 		response.Response(ctx, http.StatusOK, 200, nil, "注册成功")
 	}
-	log.Println(name, password)
+	log.Println(requestUser.Name, requestUser.Password)
 }
 
 func Login(ctx *gin.Context) {
