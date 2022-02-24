@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Problem struct {
 	gorm.Model
-	ID          uint
+	ID          int64
 	Name        string `json:"name" gorm:"type:varchar(100) not null"`
 	Description string `json:"description" gorm:"type:text"`
 	From        int    `json:"from" gorm:"type:int(11)"`

@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"prmlk.com/nextdebug/common"
+	"prmlk.com/nextdebug/dto"
 	"prmlk.com/nextdebug/model"
 	"prmlk.com/nextdebug/response"
 )
@@ -38,6 +39,6 @@ func (c ListController) Sort(ctx *gin.Context) {
 	//}
 
 	if len(problem) > 0 {
-		response.Response(ctx, http.StatusOK, 200, gin.H{"problems": problem}, "查询完成")
+		response.Response(ctx, http.StatusOK, 200, gin.H{"problems": dto.ToProblemsDto(problem)}, "查询完成")
 	}
 }
