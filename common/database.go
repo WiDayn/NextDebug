@@ -16,16 +16,17 @@ func InitDB() *gorm.DB {
 		fmt.Println("Fail to read config:", err)
 	}
 
-	args := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true",
+	args := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&loc=%s",
 		cfg.Section("sql").Key("username").String(),
 		cfg.Section("sql").Key("password").String(),
 		cfg.Section("sql").Key("host").String(),
 		cfg.Section("sql").Key("port").String(),
 		cfg.Section("sql").Key("database").String(),
-		cfg.Section("sql").Key("charset").String())
+		cfg.Section("sql").Key("charset").String(),
+		cfg.Section("sql").Key("loc").String())
 
 	if cfg.Section("sql").Key("driverName").String() == "mysql" {
-		db, err := gorm.Open(mysql.Open(args), &gorm.Config{})
+		db, _ := gorm.Open(mysql.Open(args), &gorm.Config{})
 		if err != nil {
 			fmt.Println("Fail to connect a database: ", err)
 		}

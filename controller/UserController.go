@@ -10,6 +10,7 @@ import (
 	"prmlk.com/nextdebug/dto"
 	"prmlk.com/nextdebug/model"
 	"prmlk.com/nextdebug/response"
+	"strings"
 )
 
 func Register(ctx *gin.Context) {
@@ -17,6 +18,10 @@ func Register(ctx *gin.Context) {
 
 	var requestUser = model.User{}
 	err := ctx.Bind(&requestUser)
+
+	requestUser.Name = strings.ToLower(requestUser.Name)
+	requestUser.Email = strings.ToLower(requestUser.Email)
+
 	if err != nil {
 		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "用户信息读取错误")
 		return
@@ -49,34 +54,49 @@ func Register(ctx *gin.Context) {
 	}
 	tx := DB.Create(&newUser)
 	if tx.Error != nil {
-		response.Response(ctx, http.StatusInternalServerError, 500, nil, "注册失败")
-	} else {
-		response.Response(ctx, http.StatusOK, 200, nil, "注册成功")
+		response.Response(ctx, http.StatusInternalServerError, 500, nil, "注册信息写入失败")
+		return
 	}
+	//发放token
+	token, err := common.ReleaseToken(newUser)
+	if err != nil {
+		response.Response(ctx, http.StatusInternalServerError, 500, nil, "系统异常")
+		log.Printf("token generate error : %v\n", err)
+		return
+	}
+
+	ctx.JSON(http.StatusAccepted, gin.H{
+		"code": 200,
+		"data": gin.H{"token": token},
+		"msg":  "注册成功"})
 	log.Println(requestUser.Name, requestUser.Password)
 }
 
 func Login(ctx *gin.Context) {
 	DB := common.GetDB()
-	name := ctx.PostForm("name")
-	password := ctx.PostForm("password")
+
+	var requestUser = model.User{}
+	err := ctx.Bind(&requestUser)
+
+	requestUser.Name = strings.ToLower(requestUser.Name)
+	requestUser.Email = strings.ToLower(requestUser.Email)
 
 	var user model.User
 
-	DB.Where("name = ?", name).First(&user)
+	DB.Where("name = ?", requestUser.Name).First(&user)
 
 	if user.ID <= 0 {
 		response.Response(ctx, http.StatusUnprocessableEntity, 400, nil, "用户名不存在")
 		return
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestUser.Password))
 
 	if err != nil {
 		response.Response(ctx, http.StatusUnprocessableEntity, 400, nil, "用户名或密码错误")
 		return
 	}
-
+	//发放token
 	token, err := common.ReleaseToken(user)
 	if err != nil {
 		response.Response(ctx, http.StatusInternalServerError, 500, nil, "系统异常")
