@@ -13,12 +13,27 @@ import (
 	"strings"
 )
 
-func Register(ctx *gin.Context) {
-	DB := common.GetDB()
+type IUserController interface {
+	Register(ctx *gin.Context)
+	Login(ctx *gin.Context)
+	Info(ctx *gin.Context)
+}
 
+type UserController struct {
+	DB *gorm.DB
+}
+
+func NewUserController() UserController {
+	db := common.InitDB()
+
+	return UserController{DB: db}
+}
+
+func (c UserController) Register(ctx *gin.Context) {
 	var requestUser = model.User{}
 	err := ctx.Bind(&requestUser)
 
+	requestUser.NickName = requestUser.Name
 	requestUser.Name = strings.ToLower(requestUser.Name)
 	requestUser.Email = strings.ToLower(requestUser.Email)
 
@@ -37,7 +52,7 @@ func Register(ctx *gin.Context) {
 		return
 	}
 
-	if isNameExist(DB, requestUser.Name) {
+	if isNameExist(c.DB, requestUser.Name) {
 		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "用户名已经被注册")
 		return
 	}
@@ -50,9 +65,10 @@ func Register(ctx *gin.Context) {
 	newUser := model.User{
 		Email:    requestUser.Email,
 		Name:     requestUser.Name,
+		NickName: requestUser.NickName,
 		Password: string(hashedPassword),
 	}
-	tx := DB.Create(&newUser)
+	tx := c.DB.Create(&newUser)
 	if tx.Error != nil {
 		response.Response(ctx, http.StatusInternalServerError, 500, nil, "注册信息写入失败")
 		return
@@ -71,8 +87,7 @@ func Register(ctx *gin.Context) {
 		"msg":  "注册成功"})
 }
 
-func Login(ctx *gin.Context) {
-	DB := common.GetDB()
+func (c UserController) Login(ctx *gin.Context) {
 
 	var requestUser = model.User{}
 	err := ctx.Bind(&requestUser)
@@ -82,7 +97,7 @@ func Login(ctx *gin.Context) {
 
 	var user model.User
 
-	DB.Where("name = ?", requestUser.Name).First(&user)
+	c.DB.Where("name = ?", requestUser.Name).First(&user)
 
 	if user.ID <= 0 {
 		response.Response(ctx, http.StatusUnprocessableEntity, 400, nil, "用户名不存在")
@@ -111,7 +126,7 @@ func Login(ctx *gin.Context) {
 	return
 }
 
-func Info(ctx *gin.Context) {
+func (c UserController) Info(ctx *gin.Context) {
 	user, _ := ctx.Get("user")
 
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "data": gin.H{"user": dto.ToUserDto(user.(model.User))}})

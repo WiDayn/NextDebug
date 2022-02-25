@@ -92,7 +92,8 @@ func (c OnlineJudgeController) Show(ctx *gin.Context) {
 		response.Fail(ctx, nil, "题目ID错误")
 		return
 	}
-	response.Success(ctx, gin.H{"code": 200, "data": gin.H{"online_judge": OnlineJudge}}, "获取成功")
+
+	response.Success(ctx, gin.H{"online_judge": OnlineJudge}, "获取成功")
 }
 
 func (c OnlineJudgeController) Delete(ctx *gin.Context) {

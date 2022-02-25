@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"prmlk.com/nextdebug/common"
+	"prmlk.com/nextdebug/dto"
 	"prmlk.com/nextdebug/model"
 	"prmlk.com/nextdebug/response"
 	"strconv"
@@ -95,7 +96,8 @@ func (c ProblemController) Show(ctx *gin.Context) {
 		response.Fail(ctx, nil, "题目ID错误")
 		return
 	}
-	response.Success(ctx, gin.H{"code": 200, "data": gin.H{"problem": problem}}, "获取成功")
+
+	response.Success(ctx, gin.H{"problem": dto.ToProblemDetailDto(problem)}, "获取成功")
 }
 
 func (c ProblemController) Delete(ctx *gin.Context) {

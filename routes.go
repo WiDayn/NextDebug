@@ -8,9 +8,15 @@ import (
 
 func CollectRoute(r *gin.Engine) *gin.Engine {
 	r.Use(middleware.CORSMiddleware())
-	r.POST("/api/auth/register", controller.Register)
-	r.POST("/api/auth/login", controller.Login)
-	r.GET("api/auth/info", middleware.AuthMiddleware(), controller.Info)
+
+	downloadController := controller.NewDownloadController()
+	r.GET("/api/avatar", downloadController.Avatar)
+
+	userRoutes := r.Group("/api/auth")
+	userController := controller.NewUserController()
+	userRoutes.POST("/register", userController.Register)
+	userRoutes.POST("/login", userController.Login)
+	userRoutes.GET("/info", middleware.AuthMiddleware(), userController.Info)
 
 	problemRoutes := r.Group("/api/problems")
 	problemController := controller.NewProblemController()
@@ -33,6 +39,6 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 
 	uploadAvatarRoutes := r.Group("/api/upload")
 	uploadJudgeController := controller.NewUploadController()
-	uploadAvatarRoutes.POST("/avatar", uploadJudgeController.Avatar)
+	uploadAvatarRoutes.POST("/avatar", middleware.AuthMiddleware(), uploadJudgeController.Avatar)
 	return r
 }
