@@ -11,7 +11,8 @@ import (
 )
 
 type IListController interface {
-	Sort(ctx *gin.Context)
+	SortProblem(ctx *gin.Context)
+	SortOnlineJudge(ctx *gin.Context)
 }
 
 type ListController struct {
@@ -24,21 +25,38 @@ func NewListController() IListController {
 	return ListController{DB: db}
 }
 
-func (c ListController) Sort(ctx *gin.Context) {
+func (c ListController) SortProblem(ctx *gin.Context) {
+	var query model.Query
+	err := ctx.Bind(&query)
+	if err != nil {
+		response.Fail(ctx, nil, "读取错误")
+		return
+	}
+	var problem []*model.Problem
+	//var problemSet model.ProblemSet
+
+	c.DB.Where("? <= id and id <= ?", query.From, query.To).Find(&problem)
+	//for _, set := range problem {
+	//	problemSet.Problems = append(problemSet.Problems, set)
+	//}
+	//另一种实现方法，暂时先不删
+
+	if len(problem) > 0 {
+		response.Response(ctx, http.StatusOK, 200, gin.H{"problems": dto.ToProblemsDto(problem)}, "查询完成")
+	}
+}
+
+func (c ListController) SortOnlineJudge(ctx *gin.Context) {
 	var query model.Query
 	err := ctx.Bind(&query)
 	if err != nil {
 		response.Fail(ctx, nil, "读取错误")
 	}
-	var problem []*model.Problem
-	//var problemSet model.ProblemSet
+	var onlinejudge []*model.OnlineJudge
 
-	c.DB.Where("? < id and id < ?", query.From, query.To).Find(&problem)
-	//for _, set := range problem {
-	//	problemSet.Problems = append(problemSet.Problems, set)
-	//}
+	c.DB.Where("? <= id and id <= ?", query.From, query.To).Find(&onlinejudge)
 
-	if len(problem) > 0 {
-		response.Response(ctx, http.StatusOK, 200, gin.H{"problems": dto.ToProblemsDto(problem)}, "查询完成")
+	if len(onlinejudge) > 0 {
+		response.Response(ctx, http.StatusOK, 200, gin.H{"online_judge": onlinejudge}, "查询完成")
 	}
 }

@@ -5,6 +5,7 @@ import "prmlk.com/nextdebug/model"
 type ProblemDto struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
+	From int    `json:"from"`
 }
 
 //暂时没用上
@@ -18,9 +19,10 @@ type ProblemDto struct {
 func ToProblemsDto(problem []*model.Problem) []*ProblemDto {
 	var info []*ProblemDto
 	for i, set := range problem {
-		info = append(info, &ProblemDto{0, ""})
+		info = append(info, &ProblemDto{0, "", 0})
 		info[i].ID = set.ID
 		info[i].Name = set.Name
+		info[i].From = set.From
 	}
 	return info
 }

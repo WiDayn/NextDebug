@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"prmlk.com/nextdebug/common"
@@ -31,15 +32,18 @@ func (c ProblemController) Create(ctx *gin.Context) {
 	var requestProblem model.Problem
 	err := ctx.Bind(&requestProblem)
 	if err != nil {
-		response.Fail(ctx, nil, "读取错误")
+		fmt.Println(err.Error())
+		response.Fail(ctx, nil, "读取错误，请检查数据格式是否正确")
+		return
 	}
 	if requestProblem.Name == "" {
-		response.Fail(ctx, nil, "数据验证错误")
+		response.Fail(ctx, nil, "数据验证错误，题目名称不能为空")
+		return
 	}
 
 	c.DB.Create(&requestProblem)
 
-	response.Success(ctx, gin.H{"problem": requestProblem}, "")
+	response.Success(ctx, gin.H{"problem": requestProblem}, "创建成功")
 }
 
 func (c ProblemController) Update(ctx *gin.Context) {
@@ -47,6 +51,7 @@ func (c ProblemController) Update(ctx *gin.Context) {
 	err := ctx.Bind(&requestProblem)
 	if err != nil {
 		response.Fail(ctx, nil, "读取错误")
+		return
 	}
 	if requestProblem.Name == "" {
 		response.Fail(ctx, nil, "题目标题不能为空")

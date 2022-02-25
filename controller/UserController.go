@@ -69,7 +69,6 @@ func Register(ctx *gin.Context) {
 		"code": 200,
 		"data": gin.H{"token": token},
 		"msg":  "注册成功"})
-	log.Println(requestUser.Name, requestUser.Password)
 }
 
 func Login(ctx *gin.Context) {
