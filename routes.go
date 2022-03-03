@@ -8,6 +8,7 @@ import (
 
 func CollectRoute(r *gin.Engine) *gin.Engine {
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.TLSMiddleware())
 
 	downloadController := controller.NewDownloadController()
 	r.GET("/api/avatar", downloadController.Avatar)
@@ -20,25 +21,33 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 
 	problemRoutes := r.Group("/api/problems")
 	problemController := controller.NewProblemController()
-	problemRoutes.POST("", problemController.Create)
-	problemRoutes.PUT("/:id", problemController.Update)
+	problemRoutes.POST("", middleware.AuthMiddleware(), problemController.Create)
+	problemRoutes.PUT("/:id", middleware.AuthMiddleware(), problemController.Update)
 	problemRoutes.GET("/:id", problemController.Show)
-	problemRoutes.DELETE("/:id", problemController.Delete)
+	problemRoutes.DELETE("/:id", middleware.AuthMiddleware(), problemController.Delete)
 
 	listRoutes := r.Group("/api/list")
 	listRoutesController := controller.NewListController()
 	listRoutes.POST("/sort_problem", listRoutesController.SortProblem)
 	listRoutes.POST("/sort_online_judge", listRoutesController.SortOnlineJudge)
+	listRoutes.POST("/sort_test_set", listRoutesController.SortTestSet)
 
 	onlineJudgeRoutes := r.Group("/api/online_judge")
-	onlineJudgeContorller := controller.NewOnlineJudgeController()
-	onlineJudgeRoutes.POST("", onlineJudgeContorller.Create)
-	onlineJudgeRoutes.PUT("/:id", onlineJudgeContorller.Update)
-	onlineJudgeRoutes.GET("/:id", onlineJudgeContorller.Show)
-	onlineJudgeRoutes.DELETE("/:id", onlineJudgeContorller.Delete)
+	onlineJudgeController := controller.NewOnlineJudgeController()
+	onlineJudgeRoutes.POST("", middleware.AuthMiddleware(), onlineJudgeController.Create)
+	onlineJudgeRoutes.PUT("/:id", middleware.AuthMiddleware(), onlineJudgeController.Update)
+	onlineJudgeRoutes.GET("/:id", onlineJudgeController.Show)
+	onlineJudgeRoutes.DELETE("/:id", middleware.AuthMiddleware(), onlineJudgeController.Delete)
 
 	uploadAvatarRoutes := r.Group("/api/upload")
 	uploadJudgeController := controller.NewUploadController()
 	uploadAvatarRoutes.POST("/avatar", middleware.AuthMiddleware(), uploadJudgeController.Avatar)
+
+	testSetRoutes := r.Group("/api/test_set")
+	testsController := controller.NewTestSetController()
+	testSetRoutes.POST("", middleware.AuthMiddleware(), testsController.Create)
+	testSetRoutes.PUT("/:id", middleware.AuthMiddleware(), testsController.Update)
+	testSetRoutes.GET("/:id", testsController.Show)
+	testSetRoutes.DELETE("/:id", middleware.AuthMiddleware(), testsController.Delete)
 	return r
 }

@@ -30,8 +30,13 @@ func NewProblemController() IProblemController {
 }
 
 func (c ProblemController) Create(ctx *gin.Context) {
+	str, _ := ctx.Get("user")
+	user := str.(model.User)
+
 	var requestProblem model.Problem
 	err := ctx.Bind(&requestProblem)
+
+	requestProblem.Uploader = int(user.ID)
 	if err != nil {
 		fmt.Println(err.Error())
 		response.Fail(ctx, nil, "读取错误，请检查数据格式是否正确")

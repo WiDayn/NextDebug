@@ -13,6 +13,7 @@ import (
 type IListController interface {
 	SortProblem(ctx *gin.Context)
 	SortOnlineJudge(ctx *gin.Context)
+	SortTestSet(ctx *gin.Context)
 }
 
 type ListController struct {
@@ -52,11 +53,31 @@ func (c ListController) SortOnlineJudge(ctx *gin.Context) {
 	if err != nil {
 		response.Fail(ctx, nil, "读取错误")
 	}
-	var onlinejudge []*model.OnlineJudge
+	var onlineJudge []*model.OnlineJudge
 
-	c.DB.Where("? <= id and id <= ?", query.From, query.To).Find(&onlinejudge)
+	c.DB.Where("? <= id and id <= ?", query.From, query.To).Find(&onlineJudge)
 
-	if len(onlinejudge) > 0 {
-		response.Response(ctx, http.StatusOK, 200, gin.H{"online_judge": onlinejudge}, "查询完成")
+	if len(onlineJudge) > 0 {
+		response.Response(ctx, http.StatusOK, 200, gin.H{"online_judge": onlineJudge}, "查询完成")
+	}
+}
+
+func (c ListController) SortTestSet(ctx *gin.Context) {
+	var requestProblem model.Problem
+	err := ctx.Bind(&requestProblem)
+	if err != nil {
+		response.Fail(ctx, nil, "读取错误")
+		return
+	}
+	if requestProblem.ID <= 0 {
+		response.Fail(ctx, nil, "ID有误")
+		return
+	}
+	var testSet []*model.TestSet
+
+	c.DB.Where("problem_id = ?", requestProblem.ID).Find(&testSet)
+
+	if len(testSet) > 0 {
+		response.Response(ctx, http.StatusOK, 200, gin.H{"test_set": dto.ToTestSetsDto(testSet)}, "查询完成")
 	}
 }
