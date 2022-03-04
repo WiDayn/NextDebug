@@ -2,13 +2,18 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"gopkg.in/ini.v1"
 	"prmlk.com/nextdebug/controller"
 	"prmlk.com/nextdebug/middleware"
 )
 
 func CollectRoute(r *gin.Engine) *gin.Engine {
+	cfg, _ := ini.Load("config/app.ini")
 	r.Use(middleware.CORSMiddleware())
-	r.Use(middleware.TLSMiddleware())
+
+	if cfg.Section("").Key("app_mode").String() != "development" {
+		r.Use(middleware.TLSMiddleware())
+	}
 
 	downloadController := controller.NewDownloadController()
 	r.GET("/api/avatar", downloadController.Avatar)
@@ -18,6 +23,7 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	userRoutes.POST("/register", userController.Register)
 	userRoutes.POST("/login", userController.Login)
 	userRoutes.GET("/info", middleware.AuthMiddleware(), userController.Info)
+	userRoutes.POST("/userDetail", userController.Show)
 
 	problemRoutes := r.Group("/api/problems")
 	problemController := controller.NewProblemController()

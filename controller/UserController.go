@@ -17,10 +17,32 @@ type IUserController interface {
 	Register(ctx *gin.Context)
 	Login(ctx *gin.Context)
 	Info(ctx *gin.Context)
+	Show(ctx *gin.Context)
 }
 
 type UserController struct {
 	DB *gorm.DB
+}
+
+func (c UserController) Show(ctx *gin.Context) {
+	var requestUser = model.User{}
+	err := ctx.Bind(&requestUser)
+
+	if err != nil {
+		response.Fail(ctx, nil, "参数错误")
+		return
+	}
+
+	var user model.User
+
+	c.DB.Where("id = ?", requestUser.ID).First(&user)
+
+	if user.ID == 0 {
+		response.Fail(ctx, nil, "找不到该用户")
+		return
+	}
+
+	response.Success(ctx, gin.H{"user": dto.ToUserDto(user)}, "查询成功")
 }
 
 func NewUserController() UserController {
