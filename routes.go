@@ -32,6 +32,20 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	problemRoutes.GET("/:id", problemController.Show)
 	problemRoutes.DELETE("/:id", middleware.AuthMiddleware(), problemController.Delete)
 
+	problemListRoutes := r.Group("api/problems_list")
+	problemListController := controller.NewProblemListController()
+	problemListRoutes.POST("", middleware.AuthMiddleware(), problemListController.Create)
+	problemListRoutes.PUT("/:id", middleware.AuthMiddleware(), problemListController.Update)
+	problemListRoutes.GET("/:id", problemListController.Show)
+	problemListRoutes.DELETE("/:id", middleware.AuthMiddleware(), problemListController.Delete)
+
+	problemTagRoutes := r.Group("api/problems_tag")
+	problemTagController := controller.NewProblemTagController()
+	problemTagRoutes.POST("", problemTagController.Create)
+	problemTagRoutes.PUT("/:id", middleware.AuthMiddleware(), problemTagController.Update)
+	problemTagRoutes.GET("/:id", problemTagController.Show)
+	problemTagRoutes.DELETE("/:id", middleware.AuthMiddleware(), problemTagController.Delete)
+
 	listRoutes := r.Group("/api/list")
 	listRoutesController := controller.NewListController()
 	listRoutes.POST("/sort_problem", listRoutesController.SortProblem)

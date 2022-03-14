@@ -21,7 +21,11 @@ type ProblemController struct {
 
 func NewProblemController() IProblemController {
 	db := common.InitDB()
-	err := db.AutoMigrate(model.Problem{})
+	err := db.AutoMigrate(&model.Problem{})
+	if err != nil {
+		println("数据库初始化失败..")
+		return nil
+	}
 	if err != nil {
 		println("数据库初始化失败..")
 		return nil
@@ -47,7 +51,7 @@ func (c ProblemController) Create(ctx *gin.Context) {
 		return
 	}
 
-	c.DB.Create(&requestProblem)
+	c.DB.Save(&requestProblem)
 
 	response.Success(ctx, gin.H{"problem": requestProblem}, "创建成功")
 }
@@ -79,8 +83,40 @@ func (c ProblemController) Update(ctx *gin.Context) {
 		response.Fail(ctx, nil, "找不到该题目")
 		return
 	}
-
 	c.DB.Model(&updateProblem).Update("name", requestProblem.Name)
+	//TAG
+	err = c.DB.Model(&updateProblem).Association("ProblemTag").Clear()
+	if err != nil {
+		response.Fail(ctx, nil, "关联的Tag清除失败")
+		return
+	}
+	err = c.DB.Save(&updateProblem).Association("ProblemTag").Append(requestProblem.ProblemTag)
+	if err != nil {
+		response.Fail(ctx, nil, "Tag修改失败")
+		return
+	}
+	//List
+	err = c.DB.Model(&updateProblem).Association("ProblemList").Clear()
+	if err != nil {
+		response.Fail(ctx, nil, "关联的题单清除失败")
+		return
+	}
+	err = c.DB.Save(&updateProblem).Association("ProblemList").Append(requestProblem.ProblemList)
+	if err != nil {
+		response.Fail(ctx, nil, "题单修改失败")
+		return
+	}
+	//Related
+	err = c.DB.Model(&updateProblem).Association("RelatedProblem").Clear()
+	if err != nil {
+		response.Fail(ctx, nil, "关联的问题清除失败")
+		return
+	}
+	err = c.DB.Save(&updateProblem).Association("RelatedProblem").Append(requestProblem.RelatedProblem)
+	if err != nil {
+		response.Fail(ctx, nil, "问题修改失败")
+		return
+	}
 
 	response.Success(ctx, nil, "修改成功")
 }
@@ -96,7 +132,9 @@ func (c ProblemController) Show(ctx *gin.Context) {
 	var problem model.Problem
 
 	c.DB.Where("ID = ?", ProblemId).First(&problem)
-
+	c.DB.Model(&problem).Association("ProblemTag").Find(&problem.ProblemTag)
+	c.DB.Model(&problem).Association("ProblemList").Find(&problem.ProblemList)
+	c.DB.Model(&problem).Association("RelatedProblem").Find(&problem.RelatedProblem)
 	if problem.ID == 0 {
 		response.Fail(ctx, nil, "题目ID错误")
 		return

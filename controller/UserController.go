@@ -35,7 +35,7 @@ func (c UserController) Show(ctx *gin.Context) {
 
 	var user model.User
 
-	c.DB.Where("id = ?", requestUser.ID).First(&user)
+	_ = c.DB.Where("id = ?", requestUser.ID).First(&user)
 
 	if user.ID == 0 {
 		response.Fail(ctx, nil, "找不到该用户")
