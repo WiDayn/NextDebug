@@ -85,7 +85,7 @@ func (p ProblemListController) Update(ctx *gin.Context) {
 }
 
 func (p ProblemListController) Show(ctx *gin.Context) {
-	ProblemListId, _ := strconv.Atoi(ctx.Params.ByName("id"))
+	ProblemListId, _ := strconv.Atoi(ctx.Params.ByName("originalID"))
 
 	if ProblemListId <= 0 {
 		response.Fail(ctx, nil, "请求ID错误")
@@ -94,7 +94,7 @@ func (p ProblemListController) Show(ctx *gin.Context) {
 
 	var ProblemList model.ProblemList
 
-	p.DB.Where("ID = ?", ProblemListId).First(&ProblemList)
+	p.DB.Where("original_id = ?", ProblemListId).First(&ProblemList)
 	if ProblemList.ID == 0 {
 		response.Fail(ctx, nil, "题单ID错误")
 		return

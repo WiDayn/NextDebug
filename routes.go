@@ -29,7 +29,7 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	problemController := controller.NewProblemController()
 	problemRoutes.POST("", middleware.AuthMiddleware(), problemController.Create)
 	problemRoutes.PUT("/:id", middleware.AuthMiddleware(), problemController.Update)
-	problemRoutes.GET("/:id", problemController.Show)
+	problemRoutes.GET("/:originalID", problemController.Show)
 	problemRoutes.DELETE("/:id", middleware.AuthMiddleware(), problemController.Delete)
 
 	problemListRoutes := r.Group("api/problems_list")

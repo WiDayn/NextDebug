@@ -122,16 +122,16 @@ func (c ProblemController) Update(ctx *gin.Context) {
 }
 
 func (c ProblemController) Show(ctx *gin.Context) {
-	ProblemId, _ := strconv.Atoi(ctx.Params.ByName("id"))
+	ProblemId := ctx.Params.ByName("originalID")
 
-	if ProblemId <= 0 {
+	if ProblemId == "" {
 		response.Fail(ctx, nil, "请求ID错误")
 		return
 	}
 
 	var problem model.Problem
 
-	c.DB.Where("ID = ?", ProblemId).First(&problem)
+	c.DB.Where("original_id = ?", ProblemId).First(&problem)
 	c.DB.Model(&problem).Association("ProblemTag").Find(&problem.ProblemTag)
 	c.DB.Model(&problem).Association("ProblemList").Find(&problem.ProblemList)
 	c.DB.Model(&problem).Association("RelatedProblem").Find(&problem.RelatedProblem)

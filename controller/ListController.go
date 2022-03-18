@@ -44,6 +44,8 @@ func (c ListController) SortProblem(ctx *gin.Context) {
 
 	if len(problem) > 0 {
 		response.Response(ctx, http.StatusOK, 200, gin.H{"problems": dto.ToProblemsDto(problem)}, "查询完成")
+	} else {
+		response.Fail(ctx, nil, "查询不到相关的题目")
 	}
 }
 
