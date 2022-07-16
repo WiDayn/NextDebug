@@ -23,7 +23,7 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	userRoutes.POST("/register", userController.Register)
 	userRoutes.POST("/login", userController.Login)
 	userRoutes.GET("/info", middleware.AuthMiddleware(), userController.Info)
-	userRoutes.POST("/userDetail", userController.Show)
+	userRoutes.POST("/userDetail", userController.UserDetail)
 
 	problemRoutes := r.Group("/api/problems")
 	problemController := controller.NewProblemController()

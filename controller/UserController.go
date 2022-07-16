@@ -17,14 +17,14 @@ type IUserController interface {
 	Register(ctx *gin.Context)
 	Login(ctx *gin.Context)
 	Info(ctx *gin.Context)
-	Show(ctx *gin.Context)
+	userDetail(ctx *gin.Context)
 }
 
 type UserController struct {
 	DB *gorm.DB
 }
 
-func (c UserController) Show(ctx *gin.Context) {
+func (c UserController) UserDetail(ctx *gin.Context) {
 	var requestUser = model.User{}
 	err := ctx.Bind(&requestUser)
 

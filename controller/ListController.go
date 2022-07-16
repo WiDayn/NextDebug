@@ -37,10 +37,6 @@ func (c ListController) SortProblem(ctx *gin.Context) {
 	//var problemSet model.ProblemSet
 
 	c.DB.Where("? <= id and id <= ?", query.From, query.To).Find(&problem)
-	//for _, set := range problem {
-	//	problemSet.Problems = append(problemSet.Problems, set)
-	//}
-	//另一种实现方法，暂时先不删
 
 	if len(problem) > 0 {
 		response.Response(ctx, http.StatusOK, 200, gin.H{"problems": dto.ToProblemsDto(problem)}, "查询完成")
